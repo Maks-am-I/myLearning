@@ -52,13 +52,25 @@ function runSequence(config, cycles) {
 }
 
 function generateTimeline(config, cycles) {
-  const arrTimes = [];
+  const listDuration = [];
+  let lastNumber;
 
-  for (let phase of config.phases) {
-    arrTimes.push(arrTimes.length - 1 phase.duration);
+  if(!config.phases.length) {
+    return listDuration;
   }
 
-  console.log(arrTimes)
-}
+  for(let i = 0; i !== cycles; i++) {
+    for(let phase of config.phases) {
+      if(!listDuration.length) {
+        listDuration.push(phase.duration);
+        continue;
+      }
 
-generateTimeline(config1, 1)
+      lastNumber = listDuration[listDuration.length - 1];
+
+      listDuration.push(lastNumber + phase.duration)
+    }
+  }
+
+  return listDuration;
+}
