@@ -46,19 +46,26 @@ function parseShipment(rawData) {
   const listObj = [];
   const newRawData = [];
   const lengthRawData = rawData.length;
+  const listSku = [];
 
   for(let i = 0; i < lengthRawData; i++) {
     newRawData.push(rawData[i].split('|'));
   }
 
   for(let obj of newRawData) {
+    if(listSku.includes(obj[0])) {
+      continue;
+    } else {
+      listSku.push(obj[0]);
+    }
+
     listObj.push(
       {
         sku: obj[0] || undefined,
         name: obj[1] || undefined,
         qty: +obj[2] ||undefined,
         expires: obj[3] || undefined,
-        zone: obj[4] ||undefined,
+        zone: obj[4] || 'general',
       }
     );
   }
@@ -66,4 +73,103 @@ function parseShipment(rawData) {
   return listObj;
 }
 
-console.log(parseShipment(rawData))
+function planRestock(pantry, shipment) {
+  // Создаем массив для хранения действий
+  var actions = [];
+  
+  // Проходим по каждому товару в поставке
+  for (var i = 0; i < shipment.length; i++) {
+    var currentItem = shipment[i];
+    var actionType = "";
+    
+    // Проверяем условие 1: количество меньше или равно 0
+    if (currentItem.qty <= 0) {
+      actionType = "discard";
+    } else {
+      // Проверяем условие 2: существует ли такой SKU в кладовой
+      var skuExists = false;
+      
+      // Проходим по всем товарам в кладовой
+      for (var j = 0; j < pantry.length; j++) {
+        if (pantry[j].sku === currentItem.sku) {
+          skuExists = true;
+          break; // Нашли совпадение, выходим из цикла
+        }
+      }
+      
+      // Определяем действие на основе наличия SKU
+      if (skuExists === true) {
+        actionType = "restock";
+      } else {
+        actionType = "donate";
+      }
+    }
+    
+    // Создаем объект действия
+    var action = {
+      type: actionType,
+      item: currentItem
+    };
+    
+    // Добавляем действие в массив
+    actions.push(action);
+  }
+  
+  // Возвращаем массив действий
+  return actions;
+}
+
+function groupByZone(actions) {
+  // Создаем пустой объект для хранения групп
+  var grouped = {};
+  
+  // Проходим по каждому действию
+  for (var i = 0; i < actions.length; i++) {
+    var currentAction = actions[i];
+    var zone = currentAction.item.zone;
+    
+    // Проверяем, существует ли уже такая зона в объекте
+    if (grouped[zone] === undefined) {
+      // Если зоны нет, создаем новый массив для этой зоны
+      grouped[zone] = [];
+    }
+    
+    // Добавляем текущее действие в массив соответствующей зоны
+    grouped[zone].push(currentAction);
+  }
+  
+  // Возвращаем объект с группами
+  return grouped;
+}
+
+function clonePantry(pantry) {
+  // Создаем новый пустой массив
+  var clonedPantry = [];
+  
+  // Проходим по каждому элементу кладовой
+  for (var i = 0; i < pantry.length; i++) {
+    var originalItem = pantry[i];
+    
+    // Создаем новый объект с теми же свойствами
+    var clonedItem = {
+      sku: originalItem.sku,
+      name: originalItem.name,
+      qty: originalItem.qty,
+      expires: originalItem.expires,
+      zone: originalItem.zone
+    };
+    
+    // Добавляем копию в новый массив
+    clonedPantry.push(clonedItem);
+  }
+  
+  // Возвращаем новый массив с новыми объектами
+  return clonedPantry;
+}
+
+const pantryCopy = clonePantry(pantry);
+const shipment = parseShipment(rawData);
+const actions = planRestock(pantryCopy, shipment);
+const groupedByZone = groupByZone(actions);
+
+console.log(groupedByZone);
