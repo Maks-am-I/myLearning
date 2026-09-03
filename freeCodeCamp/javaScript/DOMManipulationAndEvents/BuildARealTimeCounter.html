@@ -1,0 +1,46 @@
+<!-- 
+Build an app that is functionally similar to this example project. 
+Try not to copy the example project, give it your own personal style.
+
+In this lab, you will build a real-time character counter by using JavaScript.
+The character counter will display the number of characters entered 
+in a textarea element. The counter will update in real-time as the user 
+types in the textarea. 
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Counter</title>
+
+    <style>
+        .red {
+            color: red;
+        }
+
+    </style>
+
+</head>
+
+<body>
+    <textarea id="text-input" maxlength="50"></textarea>
+    <p id="char-count">Character Count: 0/50</p>
+</body>
+
+<script>
+    const textInput = document.getElementById('text-input');
+    const charCount = document.getElementById('char-count');
+
+    textInput.addEventListener('input', () => {
+        charCount.textContent = `Character Count: ${textInput.value.length}/50`;
+
+        if(textInput.value.length >= 50) {
+            charCount.classList.toggle('red');
+            textInput.value = textInput.value.slice(0, 50);
+        }
+    });
+</script>
+</html>
